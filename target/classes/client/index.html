@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/client/js/client.js"></script>
+
+</head>
+<body>
+
+
+
+<canvas id="canvas" width="500" height="500"></canvas>
+
+
+<form id="plotline">
+    X coordinate: <input type="text" id="x1">
+    Y coordinate: <input type="text" id="y1">
+    X coordinate: <input type="text" id="x2">
+    Y coordinate: <input type="text" id="y2">
+</form>
+<button onclick='plotline(
+    document.getElementById("x1").value,
+    document.getElementById("y1").value,
+    document.getElementById("x2").value,
+    document.getElementById("y2").value);'>Run plotline
+</button>
+
+<button onclick=
+    'ClearCanvas();'>Clear canvas
+</button>
+<br>
+
+
+
+
+
+<form id="getUser">
+    SessionCookie: <input type="text" id="SessionCookie">
+</form>
+<button onclick='getUser(document.getElementById("SessionCookie").value);'>Run getUser</button>
+<div id="DisplayUserID"></div>
+<br>
+
+
+
+
+
+<form id="getFunctions">
+    Function id: <input type="text" id="PlottedBy">
+</form>
+<button onclick='getFunctions(document.getElementById("PlottedBy").value);'>Run getFunction</button>
+<div id="DisplayFunctionDetails"></div>
+
+<ul id = "Functions">
+</ul>
+<br>
+
+
+
+
+
+<form id="addFunction">
+    FunctionID: <input type="text" name="FunctionID">
+    PlottedBy: <input type="text" name="PlottedBy">
+    EquationType: <input type="text" name="EquationType">
+    Parameters: <input type="text" name="Parameters">
+</form>
+<button onclick='addFunction(
+    document.getElementById("FunctionID").value,
+    document.getElementById("PlottedBy").value,
+    document.getElementById("EquationType").value,
+    document.getElementById("Parameters").value
+);'>Add User</button>
+
+
+
+
+
+
+<form id="addUser">
+    SessionCookie: <input type="text" name="SessionCookie">
+</form>
+<button onclick='addUser(document.getElementById("SessionCookie").value);'>Add User</button>
+
+
+
+<button onclick='testplot();'>Tedtplot</button>>
+
+
+
+
+</body>
+</html>
