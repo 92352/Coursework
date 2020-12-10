@@ -16,7 +16,8 @@ import java.sql.ResultSet;
 @Consumes(MediaType.MULTIPART_FORM_DATA)
 @Produces(MediaType.APPLICATION_JSON)
 
-public class Functions{
+public class Functions
+{
     @GET
     @Path("list")
     public String UsersList() {
@@ -94,13 +95,13 @@ public class Functions{
 
 
 
-    @POST
+    @GET
     @Path("delete/{FunctionID}")
     public String DeleteFunction(@PathParam("FunctionID") Integer FunctionID) throws Exception  //Deletes record from functions table for given FunctionID
     {
         System.out.println("Invoked Users.DeleteFunction()");
         if (FunctionID == null) {
-            throw new Exception("UserID is missing in the HTTP request's URL.");
+            throw new Exception("FunctionID is missing in the HTTP request's URL.");
         }
         try {
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Functions WHERE FunctionID = ?");

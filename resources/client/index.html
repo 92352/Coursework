@@ -32,13 +32,15 @@
 <br>
 
 
+<button onclick='testplot();'>Tedtplot</button>>
+
 
 
 
 <form id="getUser">
-    SessionCookie: <input type="text" id="SessionCookie">
+    SessionCookie: <input type="text" id="GETSessionCookie">
 </form>
-<button onclick='getUser(document.getElementById("SessionCookie").value);'>Run getUser</button>
+<button onclick='getUser(document.getElementById("GETSessionCookie").value);'>Run getUser</button>
 <div id="DisplayUserID"></div>
 <br>
 
@@ -47,9 +49,9 @@
 
 
 <form id="getFunctions">
-    Function id: <input type="text" id="PlottedBy">
+    Function id: <input type="text" id="GETPlottedBy">
 </form>
-<button onclick='getFunctions(document.getElementById("PlottedBy").value);'>Run getFunction</button>
+<button onclick='getFunctions(document.getElementById("GETPlottedBy").value);'>Run getFunction</button>
 <div id="DisplayFunctionDetails"></div>
 
 <ul id = "Functions">
@@ -61,31 +63,46 @@
 
 
 <form id="addFunction">
-    FunctionID: <input type="text" name="FunctionID">
-    PlottedBy: <input type="text" name="PlottedBy">
-    EquationType: <input type="text" name="EquationType">
-    Parameters: <input type="text" name="Parameters">
+    PlottedBy: <input type="text" name="INPPlottedBy">
+    EquationType: <input type="text" name="INPEquationType">
+    Parameters: <input type="text" name="INPParameters">
 </form>
-<button onclick='addFunction(
-    document.getElementById("FunctionID").value,
-    document.getElementById("PlottedBy").value,
-    document.getElementById("EquationType").value,
-    document.getElementById("Parameters").value
-);'>Add User</button>
+<button onclick='
 
+
+addFunction(
+    document.getElementById("addFunction").INPPlottedBy.value,
+    document.getElementById("addFunction").INPEquationType.value,
+    document.getElementById("addFunction").INPParameters.value
+);
+
+'>Add Function</button>
 
 
 
 
 
 <form id="addUser">
-    SessionCookie: <input type="text" name="SessionCookie">
+    UserID: <input type="text" name="ADDUserID">
 </form>
-<button onclick='addUser(document.getElementById("SessionCookie").value);'>Add User</button>
+<button onclick='addUser(document.getElementById("addUser").ADDUserID.value);'>Add User</button>
 
 
 
-<button onclick='testplot();'>Tedtplot</button>>
+<form id="deleteUser">
+    UserID: <input type="text" name="DELUserID">
+</form>
+<button onclick='deleteUser(document.getElementById("deleteUser").DELUserID.value);'>delete User</button>
+
+
+<form id="deleteFunction">
+    FunctionID: <input type="text" name="DELFunctionID">
+</form>
+<button onclick='deleteFunction(document.getElementById("deleteFunction").DELFunctionID.value);'>delete User</button>
+
+
+
+
 
 
 
