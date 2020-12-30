@@ -1,21 +1,95 @@
 
 
 
+var XLeft = -10;
+var XRight = 10;
+var YTop = 10;
+var YBottom =-10;
+
+var CurrentSession;
+var CurrentUser;
+var count = 2000;
+
+
+/*
+
+class CurrentUserFunctions
+{
+    constructor(FunctionID, EquationType, Parameters)
+    {
+        this.FunctionID = FunctionID;
+        this.EquationType = EquationType;
+        this.Parameters = Parameters;
+    }
+}
+
+*/
 
 
 
 
+function Load()
+{
+    CurrentSession = getCookie("SessionCookie");    //Sets CurrentSession to the cookie stored in browser
+    if(CurrentSession == "")    //If no cookie stored in browser, creates new one
+    {
+        var SC = new Date();
+        CurrentSession = SC.getTime();
+        setCookie("SessionCookie", CurrentSession, 2);  //Session cookie is time so no overlap
+        addUser(CurrentSession);
+    }
+    getUser(CurrentSession).then(
+      function(response)
+      {
+        CurrentUser = response.UserID;
+        UpdateCanvas();
+      });
 
 
+
+}
+
+
+
+
+//functions for creating and acccessing cookies
+
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+
+
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
 
 
 //functions for getting data from DB
 
 
-function getUser(SessionCookie) {
+//gets the current userID
+async function getUser(SessionCookie)
+{
     console.log("Invoked getUsers()");
     const url = "/users/get/";
-    fetch(url + SessionCookie, {
+    return await fetch(url + SessionCookie, {
         method: "GET",				//Get method
     }).then(response => {
         return response.json();                 //return response as JSON
@@ -23,31 +97,28 @@ function getUser(SessionCookie) {
         if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
             alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
         } else {
-            document.getElementById("DisplayUserID").innerHTML = response.UserID;
+            return response;
         }
     });
 }
 
 
-function getFunctions(PlottedBy) {
+
+
+
+
+async function getFunctions(PlottedBy) {
     console.log("Invoked getFunctions()");
     const url = "/functions/get/";
-    fetch(url + PlottedBy, {
+    return await fetch(url + PlottedBy, {
         method: "GET",				//Get method
     }).then(response => {
         return response.json();                 //return response as JSON
     }).then(response => {
         if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
-            alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
+            alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)//
         } else {
-            var kk = "";
-            var FunctionList = [];
-            for(var i = 0; i < response.length; i++) {  //loops through reach record returned in response
-                FunctionList[i] = response[i].FunctionID + response[i].EquationType + response[i].Parameters;
-                kk += "<li>" + FunctionList[i] + "</li>";
-            }
-            var MyList = document.getElementById('Functions');
-            MyList.innerHTML = kk;
+            return response;
         }
     });
 }
@@ -80,14 +151,13 @@ function addFunction(PlottedBy, EquationType, Parameters) {
     });
 }
 
-//currently broken
 
-function addUser(UserID) {
+function addUser(SessionCookie) {
     console.log("Invoked addUser()");
-
+    let url = "/users/add";
 
     const formData = new FormData();
-    formData.append("UserID", UserID);
+    formData.append("SessionCookie", SessionCookie);
 
 
     fetch(url, {
@@ -102,6 +172,7 @@ function addUser(UserID) {
         }
     });
 }
+
 
 
 
@@ -147,46 +218,159 @@ function deleteFunction(FunctionID)
     });
 }
 
-//Coordinate calculation functions
+
+
+
+async function listUsers() {
+    console.log("Invoked listUsers()");     //console.log your BFF for debugging client side - also use debugger statement
+    const url = "/users/list/";    		// API method on web server will be in Users class, method list
+    const users =  await fetch(url, {
+        method: "GET",				//Get method
+    }).then(response => {
+        return response.json();                 //return response as JSON
+    }).then(response =>
+    {
+        if (response.hasOwnProperty("Error"))
+        {                                                   //checks if response from the web server has an "Error"
+            alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
+        }
+        else{
+            return response;
+        }
+    });
+    return await users;
+}
 
 
 
 
 
 
-function PlotCoordinates(coordinates) {
-    for (i = 0; i < coordinates.length - 2; i++) {
-        var x1 = coordinates[[i], [0]]
-        var y1 = coordinates [[i], [1]]
-        var x2 = coordinates[[i + 1][0]]
-        var y2 = coordinates[[i + 1][1]]
-        plotline(x1, y1, x2, y2)
+
+
+
+
+
+
+
+
+
+function PlotUsersFunctions()
+{
+    getFunctions(CurrentUser).then(
+        function(response)
+        {
+            for(var i = 0; i < response.length; i++)
+            {
+                var Coordinates = CalcCoordinates(count, response[i].EquationType, XLeft, XRight, response[i].Parameters);
+                let RandomColour = "#" + Math.floor(Math.random()*16777215).toString(16);
+                PlotCoordinates(Coordinates, RandomColour);
+
+            }
+        });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+//plotting coords functions
+
+function DrawBox()
+{
+    plotline(XLeft,YBottom,XLeft,YTop, "#000000");
+    plotline(XLeft,YBottom,XRight,YBottom, "#000000");
+    plotline(XRight,YTop,XRight,YBottom, "#000000");
+    plotline(XRight,YTop,XLeft,YTop, "#000000");
+}
+
+
+
+
+
+
+function DrawAxis()
+{
+    plotline(XLeft,0,XRight, 0,"#696969");
+    plotline(0,YBottom,0,YTop, "#696969");
+
+
+
+    //code for plotting inccrements on x and y axis. these will be dynamic since the user can zoom in and out. the Max number of increments
+    //onsccreen at one time will be 100, and the min will be 10
+
+    //drawing increments on x axis
+    var XIncrementWidth = CalcIncrementSize();
+    var XIncrementHeight = calcHeight() / 70;
+    var XFirstIncrement = XIncrementWidth * Math.ceil(XLeft / XIncrementWidth);
+    for(x = XFirstIncrement; x < XRight; x = x + XIncrementWidth)
+    {
+        plotline(x, -XIncrementHeight/2, x, XIncrementHeight/2, "#696969")
+    }
+
+
+    //drawing increments on y axis;
+
+    var YIncrementWidth = CalcIncrementSize();
+    var YIncrementHeight = calcHeight() / 70;
+    var YFirstIncrement = YIncrementWidth * Math.ceil(YBottom / YIncrementWidth);
+    for(y = YFirstIncrement; y < YTop; y = y + XIncrementWidth)
+    {
+        plotline(-YIncrementHeight/2, y, YIncrementHeight/2, y, "#696969")
+    }
+
+
+}
+
+
+function CalcIncrementSize()
+{
+    var size = Math.pow(10, Math.floor(Math.log10(calcWidth()))) / 10;
+    return size;
+}
+
+
+
+
+
+
+function PlotCoordinates(coordinates, colour) {     //x1, y1, x2, y2 represent pixel coords on graph, not the actual coordinates of the point they represent
+    for (i = 0; i < coordinates.length - 1; i++) {
+        let x1 = coordinates[i][0]
+        let y1 = coordinates[i][1]
+        let x2 = coordinates[i + 1][0]
+        let y2 = coordinates[i + 1][1]
+        plotline(x1, y1, x2, y2, colour);
     }
 }
 
 
-function testplot() {
-    var coordinates = [[], []]
-    // coordinates = CalcCoordinates(100, polynomial, 1, 490, 0, 0, 0, 1, 1, 1);
-    ()
-    alert(coordinates[0][0])
-    PlotCoordinates(CalcCoordinates(100, polynomial, 1, 490, 0, 0, 0, 1, 1, 1));
-}
 
-
-function plotline(x1, y1, x2, y2)       //draws a single straight line on a the canvas between two points
+function plotline(x1, y1, x2, y2, colour)       //draws a single straight line on a the canvas between two points
 {
     var canvas = document.getElementById('canvas');         // on a canvas, the coordinate origin is in top left, so the code accounts for this
     if (canvas.getContext) {
+
+        let cx1 = 500 * ((Number(x1) - XLeft)/(calcWidth()));  //cx1, cy1, cx2, cy2 represent pixel coords on graph, not the actual coordinates of the point they represent
+        let cx2 = 500 * ((Number(x2) - XLeft)/(calcWidth())); //these lines translate the coordinates to be plotted on the 500 by 500 canvas
+        let cy1 = 500 * ((Number(y1) - YBottom)/(calcHeight()));
+        let cy2 = 500 * ((Number(y2) - YBottom)/(calcHeight()));
+
         var grid = canvas.getContext('2d');
+        grid.strokeStyle = colour;
         grid.beginPath();
-        grid.moveTo(x1, 500 - y1);
-        grid.lineTo(x2, 500 - y2);
+        grid.moveTo(cx1, 500 - cy1);
+        grid.lineTo(cx2, 500 - cy2);
         grid.stroke();
     }
 }
-
-
 
 
 
@@ -199,65 +383,128 @@ function ClearCanvas()      //clears canvas
 
 
 
+function UpdateCanvas()
+{
+    ClearCanvas();
+    DrawAxis();
+    DrawBox();
+    PlotUsersFunctions();
+}
 
 
-function CalcCoordinates(count, type, Xleft, Xright, a, b, c, d, e, f) {
-        var increment = (Xright - Xleft) / count;
-        switch (type) {
+//coord calc functions
+
+
+    function CalcCoordinates(count, type, Xleft, Xright, parameters)
+    {
+        var paramArray = parameters.split(",");
+        var a = Number(paramArray[0]);
+        var b = Number(paramArray[1]);
+        var c = Number(paramArray[2]);
+        var d = Number(paramArray[3]);
+        var e = Number(paramArray[4]);
+        var f = Number(paramArray[5]);
+
+
+        let coordinates = [];
+        let increment = (Xright - Xleft) / count; //increment between the x value of consecutive coordinates
+        switch (type) {     //selects which function to run depending on function type
+
             case 'polynomial':
-                return polynomial(count, increment, a, b, c, d, e, f);
+                coordinates = polynomial(count, increment, Xleft, a, b, c, d, e, f);
                 break;
             case 'sine':
-                return sine(count, increment, a, b, c, d, e, f);
+                coordinates = sine(count, increment, Xleft, c, d, e, f);
                 break;
             case 'cosine':
-                return cosine(count, increment, a, b, c, d, e, f);
+                coordinates = cosine(count, increment, Xleft, c, d, e, f);
                 break;
             case 'tangent':
-                return tangent(count, increment, a, b, c, d, e, f);
-        }
-    }
-
-
-    function polynomial(count, increment, a, b, c, d, e, f) {
-        var coordinates = [[], []];
-        for (i = 0; i <= count; i++) {
-            var CurrentX = i * increment;
-            coordinates[[i], [0]] = CurrentX;
-            coordinates[[i], [1]] = a * (CurrentX ^ 5) + b * (CurrentX ^ 4) + c * (CurrentX ^ 3) + d * (CurrentX ^ 2) + e * (CurrentX) + f;
+                coordinates = tangent(count, increment, Xleft, c, d, e, f);
         }
         return coordinates;
     }
 
 
-    function Sine(count, increment, a, b, c) {
-        var Coordinates = [[], []];
-        for (i = 0; i <= count; i++) {
-            var CurrentX = i * increment;
-            Coordinates[[i], [0]] = CurrentX;
-            Coordinates[[i], [1]] = Math.sin(CurrentX);
+
+
+
+
+
+    function polynomial(count, increment, Xleft, a, b, c, d, e, f)
+    {
+        let coordinates = [];
+        for (i = 0; i < count; i++) {       //loops from 0 to count to add 'count' coordinates onto the array
+            let CurrentX = i * increment + Xleft;       //set the X value of the coordinate
+            coordinates.push([
+                CurrentX,
+                a * Math.pow(CurrentX, 5) +
+                b * Math.pow(CurrentX, 4) +
+                c * Math.pow(CurrentX, 3) +
+                d * Math.pow(CurrentX, 2) +
+                e * CurrentX + f
+            ]);                     //adds new coordinate onto the end of the array
         }
-        return Coordinates;
+        return coordinates;
     }
 
 
-    function Cosine(count, increment, a, b, c) {
-        var Coordinates = [[], []];
-        for (i = 0; i <= count; i++) {
-            var CurrentX = i * increment;
-            Coordinates[[i], [0]] = CurrentX;
-            Coordinates[[i], [1]] = Math.cos(CurrentX);
-        }
-        return Coordinates;
-    }
 
 
-    function Tangent(count, increment, a, b, c) {
-        var Coordinates = [[], []];
-        for (i = 0; i <= count; i++) {
-            var CurrentX = i * increment;
-            Coordinates[[i], [0]] = CurrentX;
-            Coordinates[[i], [1]] = Math.tan(CurrentX);
-        }
-        return Coordinates;
+
+
+
+
+function sine(count, increment, Xleft, c, d, e, f)
+{
+    let coordinates = [];
+    for (i = 0; i <= count + 1; i++) { //loops from 0 to count to add 'count' coordinates onto the array
+        let CurrentX = i * increment + Xleft;       //set the X value of the coordinate
+        coordinates.push([CurrentX, c + d * Math.sin(e * CurrentX + f)]);
     }
+    return coordinates;
+}
+
+
+
+function cosine(count, increment, Xleft, c, d, e, f)
+{
+    let coordinates = [];
+    for (i = 0; i <= count + 1; i++) {  //loops from 0 to count to add 'count' coordinates onto the array
+        let CurrentX = i * increment + Xleft;       //set the X value of the coordinate
+        coordinates.push([CurrentX, c + d * Math.cos(e * CurrentX + f)]);
+    }
+    return coordinates;
+}
+
+
+function tangent(count, increment, Xleft, c, d, e, f)
+{
+    let coordinates = [];
+    for (i = 0; i <= count + 1; i++) {  //loops from 0 to count to add 'count' coordinates onto the array
+        let CurrentX = i * increment + Xleft;       //set the X value of the coordinate
+        coordinates.push([CurrentX, c + d * Math.tan(e * CurrentX + f)]);
+    }
+    return coordinates;
+}
+
+
+
+
+
+
+
+
+function calcWidth()
+{
+    var Width = XRight - XLeft;
+    return Width;
+}
+
+
+
+function calcHeight()
+{
+    var Height = YTop - YBottom;
+    return Height;
+}

@@ -5,75 +5,154 @@
     <title>Title</title>
     <script src="/client/js/client.js"></script>
 
+
+
+    <style>
+        .flex-container1 {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .flex-container1 > div {
+            background-color: #f1f1f1;
+            width: 200px;
+            margin: 10px;
+            text-align: center;
+            line-height: 10px;
+            font-size: 20px;
+        }
+
+    </style>
+
+
+
 </head>
-<body>
-
-
-
-<canvas id="canvas" width="500" height="500"></canvas>
-
-
-<form id="plotline">
-    X coordinate: <input type="text" id="x1">
-    Y coordinate: <input type="text" id="y1">
-    X coordinate: <input type="text" id="x2">
-    Y coordinate: <input type="text" id="y2">
-</form>
-<button onclick='plotline(
-    document.getElementById("x1").value,
-    document.getElementById("y1").value,
-    document.getElementById("x2").value,
-    document.getElementById("y2").value);'>Run plotline
-</button>
-
-<button onclick=
-    'ClearCanvas();'>Clear canvas
-</button>
-<br>
-
-
-<button onclick='testplot();'>Tedtplot</button>>
-
-
-
-
-<form id="getUser">
-    SessionCookie: <input type="text" id="GETSessionCookie">
-</form>
-<button onclick='getUser(document.getElementById("GETSessionCookie").value);'>Run getUser</button>
-<div id="DisplayUserID"></div>
-<br>
+<body onload='Load();'>
 
 
 
 
 
-<form id="getFunctions">
-    Function id: <input type="text" id="GETPlottedBy">
-</form>
-<button onclick='getFunctions(document.getElementById("GETPlottedBy").value);'>Run getFunction</button>
-<div id="DisplayFunctionDetails"></div>
 
-<ul id = "Functions">
-</ul>
-<br>
+<div class="flex-container1">
+
+    <div id = GridSettings>
+
+        <h1>View</h1>
+        <div class="Zoom">
+            <p>Zoom:</p>
+            <button
+                    id = ZoomIn
+                    onclick="
+                    let width = calcWidth();
+                    let height = calcHeight();
+                    XLeft = XLeft + width/4;
+                    XRight = XRight - width/4;
+                    YTop = YTop - height/4;
+                    YBottom = YBottom + height/4;
+                    UpdateCanvas();"
+            >+</button>
+
+            <button
+                    id = ZoomOut
+                    onclick="
+                    let width = calcWidth();
+                    let height = calcHeight();
+                    XLeft = XLeft - width/2;
+                    XRight = XRight + width/2;
+                    YTop = YTop + height/2;
+                    YBottom = YBottom - height/2;
+                    UpdateCanvas();"
+            >-</button>
+        </div>
+
+
+        <div class="Scroll">
+            <p>Scroll:</p>
+            <button
+                    id = ScrollLeft
+                    onclick = "
+                        var halfWidth =calcWidth() / 2;
+                        XLeft = XLeft - halfWidth;
+                        XRight = XRight - halfWidth;
+                        UpdateCanvas();"
+            ><</button>
+            <button
+                    id = ScrollRight
+                    onclick = "
+                        var halfWidth =calcWidth() / 2;
+                        XLeft = XLeft + halfWidth;
+                        XRight = XRight + halfWidth;
+                        UpdateCanvas();"
+            >></button>
+            <button
+                    id = ScrollUp
+                    onclick = "
+                        var halfHeight =calcHeight() / 2;
+                        YTop = YTop + halfHeight;
+                        YBottom = YBottom + halfHeight;
+                        UpdateCanvas();"
+            >^</button>
+            <button
+                    id = ScrollDown
+                    onclick = "
+                        var halfHeight =calcHeight() / 2;
+                        YTop = YTop - halfHeight;
+                        YBottom = YBottom - halfHeight;
+                        UpdateCanvas();"
+            >v</button>
+        </div>
+
+    </div>
+
+
+
+    <canvas id="canvas" width="500" height="500"></canvas>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 
 <form id="addFunction">
-    PlottedBy: <input type="text" name="INPPlottedBy">
-    EquationType: <input type="text" name="INPEquationType">
-    Parameters: <input type="text" name="INPParameters">
+    <label for="EquationType">Choose an equation type:</label>
+
+    <select name="EquationType" id="EquationType">
+        <option value="polynomial">Polynomial</option>
+        <option value="polynomial">Linear</option>
+        <option value="sine">Sine</option>
+        <option value="cosine">Cosine</option>
+        <option value="tangent">Tangent</option>
+    </select>
+
+    Parameters: <input type="text" name="Parameters">
+    PlottedBy: <input type="text" name="PlottedBy">
 </form>
 <button onclick='
 
-
 addFunction(
-    document.getElementById("addFunction").INPPlottedBy.value,
-    document.getElementById("addFunction").INPEquationType.value,
-    document.getElementById("addFunction").INPParameters.value
+   CurrentUser,
+   document.getElementById("addFunction").EquationType.value,
+   document.getElementById("addFunction").Parameters.value
 );
 
 '>Add Function</button>
@@ -82,25 +161,16 @@ addFunction(
 
 
 
-<form id="addUser">
-    UserID: <input type="text" name="ADDUserID">
-</form>
-<button onclick='addUser(document.getElementById("addUser").ADDUserID.value);'>Add User</button>
 
 
 
-<form id="deleteUser">
-    UserID: <input type="text" name="DELUserID">
-</form>
-<button onclick='deleteUser(document.getElementById("deleteUser").DELUserID.value);'>delete User</button>
 
 
-<form id="deleteFunction">
-    FunctionID: <input type="text" name="DELFunctionID">
-</form>
-<button onclick='deleteFunction(document.getElementById("deleteFunction").DELFunctionID.value);'>delete User</button>
+<button onclick='
 
+PlotUsersFunctions();
 
+'>Test</button>
 
 
 
