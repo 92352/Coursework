@@ -46,7 +46,7 @@ public class Functions
     @Path("get/{PlottedBy}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public String GetFunction(@PathParam("PlottedBy") Integer PlottedBy)        //Returns all fields of a function with a given PlottedBy attribute
+    public String GetFunction(@PathParam("PlottedBy") Integer PlottedBy)        //Returns all fields of all functions with a given PlottedBy attribute
     {
         System.out.println("Invoked Users.GetFunction() with PlottedBy " + PlottedBy);
         try {

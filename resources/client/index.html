@@ -4,30 +4,13 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script src="/client/js/client.js"></script>
-
-
-
-    <style>
-        .flex-container1 {
-            display: flex;
-            flex-direction: row;
-        }
-
-        .flex-container1 > div {
-            background-color: #f1f1f1;
-            width: 200px;
-            margin: 10px;
-            text-align: center;
-            line-height: 10px;
-            font-size: 20px;
-        }
-
-    </style>
-
+    <link rel="stylesheet" type="text/css" href="/client/css/styles.css">
 
 
 </head>
-<body onload='Load();'>
+<body onload='Load();
+'>
+
 
 
 
@@ -117,6 +100,42 @@
 
 
 
+<div class = flex-container2>
+    <div id = "FunctionListDiv">
+
+
+    </div>
+
+
+
+
+
+
+    <div id = "AddFunctionsDiv">
+        <form id="addFunction">
+            <label for="EquationType">Choose an equation type:</label>
+
+            <select name="EquationType" id="EquationType" onchange="UpdateAddFunctionDiv()">
+                <option value="polynomial">Polynomial</option>
+                <option value="linear">Linear</option>
+                <option value="sine">Sine</option>
+                <option value="cosine">Cosine</option>
+                <option value="tangent">Tangent</option>
+            </select>
+
+        </form>
+        <button onclick='AddFunctionONCLICK();'>Add Function</button>
+
+        <h1>Parameters:</h1>
+
+        <form id="ParametersForm">
+
+        </form>
+
+
+
+    </div>
+</div>
 
 
 
@@ -131,46 +150,6 @@
 
 
 
-
-
-<form id="addFunction">
-    <label for="EquationType">Choose an equation type:</label>
-
-    <select name="EquationType" id="EquationType">
-        <option value="polynomial">Polynomial</option>
-        <option value="polynomial">Linear</option>
-        <option value="sine">Sine</option>
-        <option value="cosine">Cosine</option>
-        <option value="tangent">Tangent</option>
-    </select>
-
-    Parameters: <input type="text" name="Parameters">
-    PlottedBy: <input type="text" name="PlottedBy">
-</form>
-<button onclick='
-
-addFunction(
-   CurrentUser,
-   document.getElementById("addFunction").EquationType.value,
-   document.getElementById("addFunction").Parameters.value
-);
-
-'>Add Function</button>
-
-
-
-
-
-
-
-
-
-
-<button onclick='
-
-PlotUsersFunctions();
-
-'>Test</button>
 
 
 

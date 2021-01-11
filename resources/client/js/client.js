@@ -9,62 +9,177 @@ var YBottom =-10;
 var CurrentSession;
 var CurrentUser;
 var count = 2000;
+var ParamIndex = ["a","b","c","d","e","f"];
 
+var ColourIndex = ['#DC143C','#6495ED','#006400','#9932CC','#FF8C00','#FFD700'];
 
-/*
-
-class CurrentUserFunctions
+var PolynomialHTML = `
+        <label for="EquationOrder">Select polynomial order</label>
+        <select id="EquationOrder" onchange="UpdateAddFunctionPolyDiv()">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+        </select>
+        <div id="PolyParams" script="float:left;">
+                    
+        </div>
+`
+var LinearHTML = `
+    <input type='text'      style="width: 15px;"     id='e'>
+    <label>X+</label>
+    <input type='text'      style="width: 15px;"     id='f'>
+`
+var SineHTML = `
+    <input type='text'      style="width: 15px;"     id='c'>+
+    <input type='text'      style="width: 15px;"     id='d'>
+    <label>Sine(</label>
+    <input type='text'      style="width: 15px;"     id='e'>X + 
+    <input type='text'      style="width: 15px;"     id='f'>)
+`
+var CosineHTML = `
+    <input type='text'      style="width: 15px;"     id='c'>+
+    <input type='text'      style="width: 15px;"     id='d'>
+    <label>Cosine(</label>
+    <input type='text'      style="width: 15px;"     id='e'>X + 
+    <input type='text'      style="width: 15px;"     id='f'>)`
+var TangentHTML = `
+    <input type='text'      style="width: 15px;"     id='c'>+
+    <input type='text'      style="width: 15px;"     id='d'>
+    <label>Tangent(</label>
+    <input type='text'      style="width: 15px;"     id='e'>X + 
+    <input type='text'      style="width: 15px;"     id='f'>)`
+function AddFunctionONCLICK()
 {
-    constructor(FunctionID, EquationType, Parameters)
+    let parameters = "";
+    for(var i = 0; i < ParamIndex.length; i++)
     {
-        this.FunctionID = FunctionID;
-        this.EquationType = EquationType;
-        this.Parameters = Parameters;
+        let CurrentParam = ParamIndex[i];
+        let CurrentParamCheck = document.getElementById(CurrentParam);
+        if(CurrentParamCheck)
+        {
+            if(CurrentParamCheck.value == "")
+            {
+                parameters +=  ",0";
+            }else {
+                parameters += "," + CurrentParamCheck.value;
+            }
+        }else
+        {
+            parameters +=  ",0";
+        }
+    }
+    parameters = parameters.substring(1);
+    console.log(parameters);
+
+
+    addFunction(CurrentUser, document.getElementById("EquationType").value, parameters).then(
+        function()
+        {
+            UpdateCanvas();
+            UpdateCheckBoxes();
+        }
+    );
+}
+function UpdateAddFunctionPolyDiv()
+{
+    let HTML = "";
+    let order = document.getElementById("EquationOrder").value;
+    for(var i = order; i >= 0 ; i--)
+        {
+            HTML += `<input type='text'      style="width: 15px;"     id='` + ParamIndex[5 - i] + `'>
+            <label>` + IndiceToText("X", i)
+            if(i != 0)
+            {
+                HTML +=  "+"
+            }
+            HTML += '</label>'
+        }
+    let PolyParams = document.getElementById("PolyParams")
+    PolyParams.innerHTML = HTML;
+}
+function UpdateAddFunctionDiv()
+{
+    let ParametersFormHTML = document.getElementById("ParametersForm");
+    ParametersFormHTML.innerHTML = "";
+    let EquationType = document.getElementById("EquationType").value;
+    switch(EquationType) {
+        case "polynomial":
+            ParametersFormHTML.innerHTML = PolynomialHTML;
+            UpdateAddFunctionPolyDiv();
+            break;
+        case "linear":
+            ParametersFormHTML.innerHTML = LinearHTML;
+            break;
+        case "sine":
+            ParametersFormHTML.innerHTML = SineHTML;
+            break;
+        case "cosine":
+            ParametersFormHTML.innerHTML = CosineHTML;
+            break;
+        case "tangent":
+            ParametersFormHTML.innerHTML = TangentHTML;
+            break;
     }
 }
-
-*/
-
-
-
-
-function Load()
+function GetColourIndex(i)
 {
+    var colour;
+    if(i > ColourIndex.length - 1)
+    {
+        var randomColor = "#" + Math.floor(Math.random()*16777215).toString(16);
+        ColourIndex.push([randomColor]);
+    }
+    colour = ColourIndex[i]
+    return colour;
+}
+async function Load()
+{
+    UpdateAddFunctionDiv();
     CurrentSession = getCookie("SessionCookie");    //Sets CurrentSession to the cookie stored in browser
-    if(CurrentSession == "")    //If no cookie stored in browser, creates new one
+    if(CurrentSession !== "") {
+        getUser(CurrentSession).then(
+            function (response) {
+                if (response == "UserNotFound" || response == undefined)    //If no cookie stored in browser, creates new one
+                {
+                    CreateNewUser().then(function(){
+                        UpdateCanvas();
+                        UpdateCheckBoxes();
+                    });
+                } else {
+                    CurrentUser = response;
+                    UpdateCanvas();
+                    UpdateCheckBoxes();
+                }
+
+            }
+        );
+    }else
     {
-        var SC = new Date();
-        CurrentSession = SC.getTime();
-        setCookie("SessionCookie", CurrentSession, 2);  //Session cookie is time so no overlap
-        addUser(CurrentSession);
+        CreateNewUser().then(function(){
+           UpdateCanvas();
+           UpdateCheckBoxes();
+        });
     }
-    getUser(CurrentSession).then(
-      function(response)
-      {
-        CurrentUser = response.UserID;
-        UpdateCanvas();
-      });
-
-
 
 }
-
-
-
-
+async function CreateNewUser()
+{
+    var SC = new Date();
+    CurrentSession = SC.getTime();
+    setCookie("SessionCookie", CurrentSession, 2);
+    CurrentUser = await addUser(CurrentSession)
+}
 //functions for creating and acccessing cookies
-
-function setCookie(cname, cvalue, exdays) {
+function setCookie(cname, cvalue, exdays)
+{
     var d = new Date();
     d.setTime(d.getTime() + (exdays*24*60*60*1000));
     var expires = "expires="+ d.toUTCString();
     document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
-
-
-
-
-function getCookie(cname) {
+function getCookie(cname)
+{
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
     var ca = decodedCookie.split(';');
@@ -79,12 +194,8 @@ function getCookie(cname) {
     }
     return "";
 }
-
-
 //functions for getting data from DB
-
-
-//gets the current userID
+//gets the current userID and assigns it to CurrentUser
 async function getUser(SessionCookie)
 {
     console.log("Invoked getUsers()");
@@ -95,19 +206,15 @@ async function getUser(SessionCookie)
         return response.json();                 //return response as JSON
     }).then(response => {
         if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
-            alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
+            console.log(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
+            return("UserNotFound");
         } else {
-            return response;
+            return response.UserID;
         }
     });
 }
-
-
-
-
-
-
-async function getFunctions(PlottedBy) {
+async function getFunctions(PlottedBy)
+{
     console.log("Invoked getFunctions()");
     const url = "/functions/get/";
     return await fetch(url + PlottedBy, {
@@ -122,9 +229,8 @@ async function getFunctions(PlottedBy) {
         }
     });
 }
-
-
-function addFunction(PlottedBy, EquationType, Parameters) {
+async function addFunction(PlottedBy, EquationType, Parameters)
+{   //creates new function.
     console.log("Invoked addFunction()");
     let url = "/functions/add";
     //const path = " -F" + " PlottedBy='" + PlottedBy + "' -F EquationType='" + EquationType + "' -F Parameters='" + Parameters + "'"
@@ -138,7 +244,7 @@ function addFunction(PlottedBy, EquationType, Parameters) {
 
 
     //alert(formData);
-    fetch(url, {
+    await fetch(url, {
         method: "POST", body: formData,		//Post method
     }).then(response => {
         return response.json();                 //return response as JSON
@@ -146,13 +252,12 @@ function addFunction(PlottedBy, EquationType, Parameters) {
         if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
             alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
         } else {
-            alert("Function saved");
+            console.log("Function saved");
         }
     });
 }
-
-
-function addUser(SessionCookie) {
+async function addUser(SessionCookie)
+{ //adds user with given sessioncookie. sets currentuser to the new records UserID field and returns it
     console.log("Invoked addUser()");
     let url = "/users/add";
 
@@ -160,26 +265,26 @@ function addUser(SessionCookie) {
     formData.append("SessionCookie", SessionCookie);
 
 
-    fetch(url, {
+    return await fetch(url, {
         method: "POST", body: formData,		//Post method
     }).then(response => {
         return response.json();                 //return response as JSON
     }).then(response => {
         if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
-            alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
+            console.log(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
+            return("addUserFailed")
         } else {
-            alert("User saved");
+             return getUser(SessionCookie).then(
+                function(UserID)
+                {
+                    console.log("User saved with UserID: " + UserID);
+                    return UserID;
+                }
+            );
         }
     });
 }
-
-
-
-
-
-
-
-function deleteUser(UserID)
+async function deleteUser(UserID)
 {
     console.log("Invoked deleteUser()");
 
@@ -193,13 +298,11 @@ function deleteUser(UserID)
         if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
             alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
         } else {
-            alert("User deleted");
+            console.log("User deleted");
         }
     });
 }
-
-
-function deleteFunction(FunctionID)
+async function deleteFunction(FunctionID)
 {
     console.log("Invoked deleteFunction()");
 
@@ -213,15 +316,12 @@ function deleteFunction(FunctionID)
         if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
             alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
         } else {
-            alert("Function deleted");
+            console.log("Function deleted");
         }
     });
 }
-
-
-
-
-async function listUsers() {
+async function listUsers()
+{
     console.log("Invoked listUsers()");     //console.log your BFF for debugging client side - also use debugger statement
     const url = "/users/list/";    		// API method on web server will be in Users class, method list
     const users =  await fetch(url, {
@@ -240,21 +340,6 @@ async function listUsers() {
     });
     return await users;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function PlotUsersFunctions()
 {
     getFunctions(CurrentUser).then(
@@ -262,27 +347,12 @@ function PlotUsersFunctions()
         {
             for(var i = 0; i < response.length; i++)
             {
-                var Coordinates = CalcCoordinates(count, response[i].EquationType, XLeft, XRight, response[i].Parameters);
-                let RandomColour = "#" + Math.floor(Math.random()*16777215).toString(16);
-                PlotCoordinates(Coordinates, RandomColour);
-
+                let Coordinates = CalcCoordinates(count, response[i].EquationType, XLeft, XRight, response[i].Parameters);
+                PlotCoordinates(Coordinates, GetColourIndex(i));
             }
         });
 }
-
-
-
-
-
-
-
-
-
-
-
-
 //plotting coords functions
-
 function DrawBox()
 {
     plotline(XLeft,YBottom,XLeft,YTop, "#000000");
@@ -290,12 +360,6 @@ function DrawBox()
     plotline(XRight,YTop,XRight,YBottom, "#000000");
     plotline(XRight,YTop,XLeft,YTop, "#000000");
 }
-
-
-
-
-
-
 function DrawAxis()
 {
     plotline(XLeft,0,XRight, 0,"#696969");
@@ -328,31 +392,44 @@ function DrawAxis()
 
 
 }
-
-
 function CalcIncrementSize()
 {
     var size = Math.pow(10, Math.floor(Math.log10(calcWidth()))) / 10;
     return size;
 }
-
-
-
-
-
-
-function PlotCoordinates(coordinates, colour) {     //x1, y1, x2, y2 represent pixel coords on graph, not the actual coordinates of the point they represent
+function PlotCoordinates(coordinates, colour)
+{     //x1, y1, x2, y2 represent pixel coords on graph, not the actual coordinates of the point they represent
     for (i = 0; i < coordinates.length - 1; i++) {
         let x1 = coordinates[i][0]
         let y1 = coordinates[i][1]
         let x2 = coordinates[i + 1][0]
         let y2 = coordinates[i + 1][1]
+
+        if(y2 == "TopAsymptote")
+        {
+            y2 = YTop;
+        }
+        if(y2 == "BottomAsymptote")
+        {
+            y2 = YBottom;
+        } if(y1 == "TopAsymptote")
+        {
+            y1 = YBottom;
+        }
+        if(y1 == "BottomAsymptote")
+        {
+            y1 = YTop;
+        }
+
+
         plotline(x1, y1, x2, y2, colour);
     }
 }
-
-
-
+function tanGradient(XValue, d, e, f)
+{
+    let Gradient = e * d * (1 / Math.pow(Math.cos(e * XValue + f), 2));
+    return Gradient;
+}
 function plotline(x1, y1, x2, y2, colour)       //draws a single straight line on a the canvas between two points
 {
     var canvas = document.getElementById('canvas');         // on a canvas, the coordinate origin is in top left, so the code accounts for this
@@ -371,18 +448,12 @@ function plotline(x1, y1, x2, y2, colour)       //draws a single straight line o
         grid.stroke();
     }
 }
-
-
-
 function ClearCanvas()      //clears canvas
 {
     var canvas = document.getElementById("canvas")
     var context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
 }
-
-
-
 function UpdateCanvas()
 {
     ClearCanvas();
@@ -390,29 +461,30 @@ function UpdateCanvas()
     DrawBox();
     PlotUsersFunctions();
 }
-
-
 //coord calc functions
+function SplitParams(parameters)    //splits param string into array
+{
+    var paramArray = parameters.split(",").map(Number);
+    return paramArray;
+}
+function CalcCoordinates(count, type, Xleft, Xright, parameters)
+{
+    var paramArray = SplitParams(parameters);
+    var a = paramArray[0];
+    var b = paramArray[1];
+    var c = paramArray[2];
+    var d = paramArray[3];
+    var e = paramArray[4];
+    var f = paramArray[5];
 
 
-    function CalcCoordinates(count, type, Xleft, Xright, parameters)
-    {
-        var paramArray = parameters.split(",");
-        var a = Number(paramArray[0]);
-        var b = Number(paramArray[1]);
-        var c = Number(paramArray[2]);
-        var d = Number(paramArray[3]);
-        var e = Number(paramArray[4]);
-        var f = Number(paramArray[5]);
-
-
-        let coordinates = [];
-        let increment = (Xright - Xleft) / count; //increment between the x value of consecutive coordinates
-        switch (type) {     //selects which function to run depending on function type
+    let coordinates = [];
+    let increment = (Xright - Xleft) / count; //increment between the x value of consecutive coordinates
+    switch (type) {     //selects which function to run depending on function type
 
             case 'polynomial':
-                coordinates = polynomial(count, increment, Xleft, a, b, c, d, e, f);
-                break;
+                 coordinates = polynomial(count, increment, Xleft, a, b, c, d, e, f);
+            break;
             case 'sine':
                 coordinates = sine(count, increment, Xleft, c, d, e, f);
                 break;
@@ -423,16 +495,9 @@ function UpdateCanvas()
                 coordinates = tangent(count, increment, Xleft, c, d, e, f);
         }
         return coordinates;
-    }
-
-
-
-
-
-
-
-    function polynomial(count, increment, Xleft, a, b, c, d, e, f)
-    {
+}
+function polynomial(count, increment, Xleft, a, b, c, d, e, f)
+{
         let coordinates = [];
         for (i = 0; i < count; i++) {       //loops from 0 to count to add 'count' coordinates onto the array
             let CurrentX = i * increment + Xleft;       //set the X value of the coordinate
@@ -446,15 +511,7 @@ function UpdateCanvas()
             ]);                     //adds new coordinate onto the end of the array
         }
         return coordinates;
-    }
-
-
-
-
-
-
-
-
+}
 function sine(count, increment, Xleft, c, d, e, f)
 {
     let coordinates = [];
@@ -464,9 +521,6 @@ function sine(count, increment, Xleft, c, d, e, f)
     }
     return coordinates;
 }
-
-
-
 function cosine(count, increment, Xleft, c, d, e, f)
 {
     let coordinates = [];
@@ -476,35 +530,208 @@ function cosine(count, increment, Xleft, c, d, e, f)
     }
     return coordinates;
 }
-
-
 function tangent(count, increment, Xleft, c, d, e, f)
 {
     let coordinates = [];
     for (i = 0; i <= count + 1; i++) {  //loops from 0 to count to add 'count' coordinates onto the array
         let CurrentX = i * increment + Xleft;       //set the X value of the coordinate
-        coordinates.push([CurrentX, c + d * Math.tan(e * CurrentX + f)]);
+        //if statement checks whether the distance between currentx and the closest next asymtote is less than the inteval
+        if(NearestTanAsymtote(CurrentX, e, f) - (CurrentX) < increment)
+        {
+            if(tanGradient(CurrentX, d, e, f) > 0)
+            {
+                coordinates.push([CurrentX, "TopAsymptote"]);
+            }else
+            {
+                coordinates.push([CurrentX, "BottomAsymptote"]);
+            }
+            //if  a coord has y = "Asymptote" it means there's an asymptote between it and the next coord
+        }else{
+            coordinates.push([CurrentX, c + d * Math.tan(e * CurrentX + f)]);
+        }
     }
     return coordinates;
 }
+function NearestTanAsymtote (CurrentX, e, f)    //finds the x of next asymptote
+{
+    let PI = Math.PI;
+    var Asymptote;
+    if(e > 0)
+    {
+        Asymptote = Math.ceil((CurrentX - (PI/(2*e)) + (f/e)) / (PI/e)) * (PI/e)     +      (PI/(2*e)) - (f/e) ;
+    }else
+    {
 
+        Asymptote = Math.floor((CurrentX - (PI/(2*e)) + (f/e)) / (PI/e)) * (PI/e)     +      (PI/(2*e)) - (f/e) ;
+    }
+    return Asymptote;
 
-
-
-
-
-
-
+}
 function calcWidth()
 {
     var Width = XRight - XLeft;
     return Width;
 }
-
-
-
 function calcHeight()
 {
     var Height = YTop - YBottom;
     return Height;
+}
+//functions to do with checkboxes
+function UpdateCheckBoxes()
+{
+
+    let FunctionListDiv = document.getElementById("FunctionListDiv");
+    FunctionListDiv.innerHTML = '';
+
+    getFunctions(CurrentUser).then(function(response){
+        for(var i = 0; i < response.length; i++)
+        {
+            let DisplayName = CalcDisplayName(response[i].EquationType, response[i].Parameters);
+            NewCheckBox(DisplayName, response[i].FunctionID);
+
+
+
+        }
+        //create delete button
+        let ButtonHTML = `
+                <button onclick='
+                    DeleteCheckedFunctions().then(function(){
+                        UpdateCheckBoxes();
+                        UpdateCanvas();
+                    });
+                '>Delete selected functions</button>
+                 <br>`;
+
+        FunctionListDiv.innerHTML += ButtonHTML;
+    });
+
+}
+function NewCheckBox(CheckName, FunctionID) //creates a new Function checkbox
+{
+    let checkboxcount = document.querySelectorAll("input[type='checkbox']").length;
+
+    //let FunctionListDiv = document.getElementById('FunctionListDiv').getElementsByTagName('*');
+    let FunctionIndex = 1;  //starts at 1.
+    for(var i = 0 ; i <= checkboxcount - 1; i++){
+        FunctionIndex = i + 2;
+    }
+    let colour = GetColourIndex(FunctionIndex - 1);
+    let FunctionRadioID = "Function" + FunctionIndex
+
+    let HTML =
+        "<label for=    "+FunctionRadioID+
+        " style='color:  "+colour+
+        ";'             "+
+        ">              "+CheckName+
+        "</label><input type='checkbox' id="    +FunctionRadioID+
+        " value=         "+FunctionID+
+        "><br>";
+    document.getElementById("FunctionListDiv").insertAdjacentHTML("beforeend", HTML)
+}
+function CalcDisplayName(type, parameters) //calculates a string ready for display for the different equations
+{
+    let paramIntArray = SplitParams(parameters);
+    let paramStrArray =[];
+    for(var i = 0; i < paramIntArray.length; i++)
+    {
+        if(paramIntArray[i] > 0)
+        {
+            paramStrArray.push(["+" + String(paramIntArray[i])]);
+        }else
+        {
+            paramStrArray.push([String(paramIntArray[i])]);
+        }
+    }
+
+
+
+
+    let DisplayName = "";
+
+    switch (type) {     //selects which function to run depending on function type
+
+        case 'polynomial':
+            for(var i = 0; i < paramStrArray.length; i++)
+            {
+                let CurrentIndices = 5 - i;
+                let CurrentParam = paramStrArray[i];
+                if(Number(CurrentParam) != 0)
+                {
+                    DisplayName += (CurrentParam + IndiceToText("X", CurrentIndices));
+                }
+            }
+            break;
+        case 'sine':
+            DisplayName = TrigDisplayName("Sine", paramStrArray[2], paramStrArray[3], paramStrArray[4], paramStrArray[5]);
+            break;
+        case 'cosine':
+            DisplayName = TrigDisplayName("Cosine", paramStrArray[2], paramStrArray[3], paramStrArray[4], paramStrArray[5]);
+            break;
+        case 'tangent':
+            DisplayName = TrigDisplayName("Tangent", paramStrArray[2], paramStrArray[3], paramStrArray[4], paramStrArray[5]);
+    }
+    return "Y = " + DisplayName;
+}
+function IndiceToText(Number, Power) //converts an indice to HTML ready text
+{
+    switch (Power) {
+        case 0:
+            return ""
+            break;
+        case 1:
+            return Number
+            break;
+        default:
+            return Number + "<sup>" + Power + "</sup>";
+    }
+}
+function TrigDisplayName(Type, c, d, e, f) //function which returns display title for all trig functions
+{
+    let DisplayName = "";
+    if(Number(c) == 0)
+    {
+        c = "";
+        if(Number(d)  > 0)
+        {
+            d = String(d).slice(1);
+        }
+    }
+    if(Number(f) == 0)
+    {
+        f = "";
+    }
+
+    if(Number(e) == 1)
+    {
+        e = "";
+    }
+
+    if(Number(e)  > 0)
+    {
+        e = String(e).slice(1);
+    }
+
+
+    if(Number(d) == 0)
+    {
+        DisplayName = Number(c);
+        return DisplayName;
+    }
+    if(Number(d) == 1)
+    {
+        d = "";
+    }
+
+
+    DisplayName =  c + d + Type + "(" + e + "X" + f + ")";
+
+    return DisplayName;
+}
+async function DeleteCheckedFunctions() {
+
+    var checkboxes = document.querySelectorAll("input[type=checkbox]:checked")
+    for (var i = 0; i < checkboxes.length; i++) {
+        await deleteFunction(checkboxes[i].value);
+    }
 }
