@@ -12,7 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 
-@Path("functions/")
+@Path("functions/")     //Returns every single functions in the database
 @Consumes(MediaType.MULTIPART_FORM_DATA)
 @Produces(MediaType.APPLICATION_JSON)
 
@@ -75,9 +75,12 @@ public class Functions
 
 
 
-    @POST
+    @POST   //Creates new record in Functions table
     @Path("add")
-    public String addFunction(@FormDataParam("PlottedBy") Integer PlottedBy, @FormDataParam("EquationType") String EquationType, @FormDataParam("Parameters") String Parameters) //Creates new record in Functions tablr
+    public String addFunction(
+            @FormDataParam("PlottedBy") Integer PlottedBy,
+            @FormDataParam("EquationType") String EquationType,
+            @FormDataParam("Parameters") String Parameters)
     {
         System.out.println("Invoked Users.AddFunction()");
         try {

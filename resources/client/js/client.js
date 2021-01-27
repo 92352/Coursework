@@ -49,6 +49,9 @@ var TangentHTML = `
     <label>Tangent(</label>
     <input type='text'      style="width: 15px;"     id='e'>X + 
     <input type='text'      style="width: 15px;"     id='f'>)`
+
+
+//functions for add function div
 function AddFunctionONCLICK()
 {
     let parameters = "";
@@ -72,8 +75,13 @@ function AddFunctionONCLICK()
     parameters = parameters.substring(1);
     console.log(parameters);
 
-
-    addFunction(CurrentUser, document.getElementById("EquationType").value, parameters).then(
+    let EquationType = document.getElementById("EquationType").value;
+    if(EquationType == "linear")
+    {
+        EquationType = "polynomial";
+    }
+    
+    addFunction(CurrentUser, EquationType, parameters).then(
         function()
         {
             UpdateCanvas();
@@ -122,6 +130,9 @@ function UpdateAddFunctionDiv()
             break;
     }
 }
+
+
+
 function GetColourIndex(i)
 {
     var colour;
@@ -170,6 +181,9 @@ async function CreateNewUser()
     setCookie("SessionCookie", CurrentSession, 2);
     CurrentUser = await addUser(CurrentSession)
 }
+
+
+
 //functions for creating and acccessing cookies
 function setCookie(cname, cvalue, exdays)
 {
@@ -194,36 +208,29 @@ function getCookie(cname)
     }
     return "";
 }
+
+
+
+
+
+
+
+
+
 //functions for getting data from DB
 //gets the current userID and assigns it to CurrentUser
-async function getUser(SessionCookie)
-{
-    console.log("Invoked getUsers()");
-    const url = "/users/get/";
-    return await fetch(url + SessionCookie, {
-        method: "GET",				//Get method
-    }).then(response => {
-        return response.json();                 //return response as JSON
-    }).then(response => {
-        if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
-            console.log(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
-            return("UserNotFound");
-        } else {
-            return response.UserID;
-        }
-    });
-}
+
 async function getFunctions(PlottedBy)
 {
     console.log("Invoked getFunctions()");
     const url = "/functions/get/";
     return await fetch(url + PlottedBy, {
-        method: "GET",				//Get method
+        method: "GET",
     }).then(response => {
         return response.json();                 //return response as JSON
     }).then(response => {
         if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
-            alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)//
+            alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
         } else {
             return response;
         }
@@ -232,18 +239,13 @@ async function getFunctions(PlottedBy)
 async function addFunction(PlottedBy, EquationType, Parameters)
 {   //creates new function.
     console.log("Invoked addFunction()");
-    let url = "/functions/add";
-    //const path = " -F" + " PlottedBy='" + PlottedBy + "' -F EquationType='" + EquationType + "' -F Parameters='" + Parameters + "'"
-    //alert(url + " -F" + " PlottedBy='" + PlottedBy + "' -F EquationType='" + EquationType + "' -F Parameters='" + Parameters + "'");
-
-
+    const url = "/functions/add";
     const formData = new FormData();
     formData.append("PlottedBy", PlottedBy);
     formData.append("EquationType", EquationType);
     formData.append("Parameters", Parameters);
 
 
-    //alert(formData);
     await fetch(url, {
         method: "POST", body: formData,		//Post method
     }).then(response => {
@@ -253,6 +255,24 @@ async function addFunction(PlottedBy, EquationType, Parameters)
             alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
         } else {
             console.log("Function saved");
+        }
+    });
+}
+async function deleteFunction(FunctionID)
+{
+    console.log("Invoked deleteFunction()");
+
+
+    const url = "/functions/delete/";
+    fetch(url + FunctionID, {
+        method: "GET",				//Post method
+    }).then(response => {
+        return response.json();                 //return response as JSON
+    }).then(response => {
+        if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
+            alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
+        } else {
+            console.log("Function deleted");
         }
     });
 }
@@ -302,21 +322,20 @@ async function deleteUser(UserID)
         }
     });
 }
-async function deleteFunction(FunctionID)
+async function getUser(SessionCookie)
 {
-    console.log("Invoked deleteFunction()");
-
-
-    const url = "/functions/delete/";
-    fetch(url + FunctionID, {
-        method: "GET",				//Post method
+    console.log("Invoked getUsers()");
+    const url = "/users/get/";
+    return await fetch(url + SessionCookie, {
+        method: "GET",				//Get method
     }).then(response => {
         return response.json();                 //return response as JSON
     }).then(response => {
         if (response.hasOwnProperty("Error")) { //checks if response from the web server has an "Error"
-            alert(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
+            console.log(JSON.stringify(response));    // if it does, convert JSON object to string and alert (pop up window)
+            return("UserNotFound");
         } else {
-            console.log("Function deleted");
+            return response.UserID;
         }
     });
 }
@@ -340,6 +359,17 @@ async function listUsers()
     });
     return await users;
 }
+
+
+
+
+
+
+
+
+
+
+//plotting coords functions
 function PlotUsersFunctions()
 {
     getFunctions(CurrentUser).then(
@@ -352,7 +382,6 @@ function PlotUsersFunctions()
             }
         });
 }
-//plotting coords functions
 function DrawBox()
 {
     plotline(XLeft,YBottom,XLeft,YTop, "#000000");
@@ -461,12 +490,15 @@ function UpdateCanvas()
     DrawBox();
     PlotUsersFunctions();
 }
-//coord calc functions
+
+
+
 function SplitParams(parameters)    //splits param string into array
 {
     var paramArray = parameters.split(",").map(Number);
     return paramArray;
 }
+//coord calc functions
 function CalcCoordinates(count, type, Xleft, Xright, parameters)
 {
     var paramArray = SplitParams(parameters);
@@ -577,6 +609,9 @@ function calcHeight()
     var Height = YTop - YBottom;
     return Height;
 }
+
+
+
 //functions to do with checkboxes
 function UpdateCheckBoxes()
 {
@@ -611,7 +646,6 @@ function NewCheckBox(CheckName, FunctionID) //creates a new Function checkbox
 {
     let checkboxcount = document.querySelectorAll("input[type='checkbox']").length;
 
-    //let FunctionListDiv = document.getElementById('FunctionListDiv').getElementsByTagName('*');
     let FunctionIndex = 1;  //starts at 1.
     for(var i = 0 ; i <= checkboxcount - 1; i++){
         FunctionIndex = i + 2;
@@ -728,8 +762,8 @@ function TrigDisplayName(Type, c, d, e, f) //function which returns display titl
 
     return DisplayName;
 }
-async function DeleteCheckedFunctions() {
-
+async function DeleteCheckedFunctions()
+{
     var checkboxes = document.querySelectorAll("input[type=checkbox]:checked")
     for (var i = 0; i < checkboxes.length; i++) {
         await deleteFunction(checkboxes[i].value);

@@ -88,7 +88,7 @@ public class Users {
 
     @POST
     @Path("add")
-    public String addUser(@FormDataParam("SessionCookie") String SessionCookie) //Creates new record in Functions table
+    public String addUser(@FormDataParam("SessionCookie") String SessionCookie) //Creates new record in Users table
     {
         System.out.println("Invoked Users.AddUser()");
         try {
